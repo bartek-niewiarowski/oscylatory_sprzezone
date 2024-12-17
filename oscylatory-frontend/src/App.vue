@@ -16,7 +16,7 @@ const fetchResults = async () => {
         k: 10.0,
         k_s: 5.0,
         x0_val: 1.0,
-        t_max: 20.0,
+        t_max: 120.0,
       }),
     })
 
@@ -29,22 +29,44 @@ const fetchResults = async () => {
   }
 }
 
-// Funkcja rysująca wykres wyników
 const plotResults = () => {
-  const canvas = document.getElementById('plot')
-  const ctx = canvas.getContext('2d')
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  const canvas = document.getElementById('plot');
+  const ctx = canvas.getContext('2d');
+  const positions = results.value.slice(0, 10); // Pobierz tylko pozycje pierwszych 10 ciężarków
+  const timeSteps = times.value.length; // Ilość kroków czasowych
+  let currentFrame = 0; // Licznik klatek
 
-  results.value.slice(0, 10).forEach((positions, index) => {
-    ctx.beginPath()
-    ctx.moveTo(0, 250)
-    for (let i = 0; i < times.value.length; i++) {
-      ctx.lineTo(i * 2, 250 - positions[i] * 50)
+  const animate = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Wyczyść canvas
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+
+    // Rysowanie sprężyn jako linii między ciężarkami
+    ctx.strokeStyle = "gray";
+    for (let i = 0; i < positions.length - 1; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * (canvasWidth / positions.length), canvasHeight / 2 - positions[i][currentFrame] * 50);
+      ctx.lineTo((i + 1) * (canvasWidth / positions.length), canvasHeight / 2 - positions[i + 1][currentFrame] * 50);
+      ctx.stroke();
     }
-    ctx.strokeStyle = `hsl(${index * 36}, 100%, 50%)`
-    ctx.stroke()
-  })
-}
+
+    // Rysowanie ciężarków jako okręgów
+    for (let i = 0; i < positions.length; i++) {
+      ctx.beginPath();
+      const x = i * (canvasWidth / positions.length);
+      const y = canvasHeight / 2 - positions[i][currentFrame] * 50;
+      ctx.arc(x, y, 10, 0, 2 * Math.PI); // Rysowanie kółek
+      ctx.fillStyle = `hsl(${i * 36}, 100%, 50%)`;
+      ctx.fill();
+    }
+
+    // Przejdź do następnej klatki
+    currentFrame = (currentFrame + 1) % timeSteps; // Zapętl klatki
+    requestAnimationFrame(animate); // Wywołanie rekurencyjne dla animacji
+  };
+
+  animate(); // Uruchom animację
+};
 </script>
 
 <template>

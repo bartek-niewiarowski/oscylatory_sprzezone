@@ -47,7 +47,7 @@ class SystemParams(BaseModel):
     k: float = Query(..., description="Stala sprezystosci glowna (1-20)", ge=1.0, le=20.0)
     k_s: float = Query(..., description="Stala sprezystosci sasiadow (1-20)", ge=1.0, le=20.0)
     x0_val: float = Query(1.0, description="Poczatkowe odchylenie pierwszego ciezarka")
-    t_max: float = Query(20.0, description="Czas symulacji", ge=5.0, le=50.0)
+    t_max: float = Query(20.0, description="Czas symulacji", ge=5.0, le=120.0)
 
 @app.post("/solve_system")
 def solve_spring_system(params: SystemParams):
@@ -55,7 +55,7 @@ def solve_spring_system(params: SystemParams):
     Rozwiazuje uklad sprężynowy z podanymi parametrami.
     """
     t_span = (0, params.t_max)
-    t_eval = np.linspace(0, params.t_max, 500)
+    t_eval = np.linspace(0, params.t_max, int(params.t_max/20*1000))
     times, results = solve_system(params.N, params.k, params.k_s, params.x0_val, t_span, t_eval)
     return {
         "time": times,
