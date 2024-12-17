@@ -1,9 +1,18 @@
 from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
 from scipy.integrate import solve_ivp
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Dopuszczaj dowolne źródła
+    allow_credentials=True,
+    allow_methods=["*"],  # Zezwalaj na wszystkie metody
+    allow_headers=["*"],  # Zezwalaj na wszystkie nagłówki
+)
 
 # Funkcja aktualizująca macierze mas i sztywności
 def update_matrices(N, masses, k, k_s):
