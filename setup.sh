@@ -5,8 +5,8 @@
 set -e
 
 # Zmienne dla sciezek
-FASTAPI_DIR="$HOME/oscylatory-backend"
-VUE_DIR="$HOME/oscylatory-frontend"
+FASTAPI_DIR="$HOME/oscylatory_sprzezone/oscylatory-backend"
+VUE_DIR="$HOME/oscylatory_sprzezone/oscylatory-frontend"
 
 # Funkcja instalacji Node.js i npm (opcjonalnie)
 install_node() {
@@ -30,19 +30,26 @@ deploy_fastapi() {
     # Tworzenie wirtualnego srodowiska, jesli nie istnieje
     if [ ! -d "venv" ]; then
         python3 -m venv venv
-        source venv/bin/activate
-        pip install --upgrade pip
-        pip install fastapi uvicorn
-        pip install scipy
-        pip install numpy
-        pip install pydantic
-    else
-        source venv/bin/activate
     fi
+    . venv/bin/activate
+
+    # Instalacja wymaganych pakietow
+    pip install --upgrade pip
+    pip install fastapi uvicorn scipy numpy pydantic
+
+    # Sprawdzenie pelnej sciezki do uvicorn
+    UVICORN_PATH=$(which uvicorn)
+    echo "Uvicorn znaleziony: $UVICORN_PATH"
 
     # Uruchamianie FastAPI na porcie 8000
-    nohup uvicorn api:app --host 0.0.0.0 --port 8000 &
-    echo "FastAPI uruchomiony na porcie 8000!"
+    nohup $UVICORN_PATH api:app --host 0.0.0.0 --port 8000 > fastapi.log 2>&1 &
+    sleep 2
+    if pgrep -f "$UVICORN_PATH api:app" > /dev/null; then
+        echo "FastAPI uruchomiony na porcie 8000! Log zapisany w fastapi.log."
+    else
+        echo "Nie udalo sie uruchomic FastAPI. Sprawdz fastapi.log."
+        exit 1
+    fi
 }
 
 # Uruchomienie Vue.js Frontend
@@ -56,9 +63,21 @@ deploy_vue() {
         npm install
     fi
 
+    # Sprawdzenie i instalacja vue-cli-service, jesli nie istnieje
+    if ! npx vue-cli-service --version &> /dev/null; then
+        echo "vue-cli-service nie znaleziono, instalacja lokalna..."
+        npm install @vue/cli-service --save-dev
+    fi
+
     # Uruchamianie Vue.js na porcie 8080
-    nohup npm run serve -- --host 0.0.0.0 &
-    echo "Vue.js uruchomiony na porcie 8080!"
+    nohup npx vue-cli-service serve --host 0.0.0.0 > vue.log 2>&1 &
+    sleep 2
+    if pgrep -f "vue-cli-service serve" > /dev/null; then
+        echo "Vue.js uruchomiony na porcie 8080! Log zapisany w vue.log."
+    else
+        echo "Nie udalo sie uruchomic Vue.js. Sprawdz vue.log."
+        exit 1
+    fi
 }
 
 # Glowny skrypt
@@ -77,6 +96,7 @@ main() {
     echo "\nBackend FastAPI: http://localhost:8000"
     echo "Frontend Vue.js: http://localhost:8080"
     echo "\nAplikacja uruchomiona pomyslnie!"
+    echo "\nAby zatrzymac aplikacje, uzyj komend: 'pkill -f uvicorn' oraz 'pkill -f vue-cli-service'."
 }
 
 main
