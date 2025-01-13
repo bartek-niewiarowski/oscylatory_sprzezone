@@ -6,6 +6,14 @@ const times = ref([])
 const results = ref([])
 
 // Parametry układu z wartościami domyślnymi
+const defaultParams = ref({
+  N: 10,
+  k: 10.0,
+  k_s: 5.0,
+  x0_val: 1.0,
+  t_max: 20.0,
+})
+
 const params = ref({
   N: 10,
   k: 10.0,
@@ -14,33 +22,69 @@ const params = ref({
   t_max: 20.0,
 })
 
+
+
+// Funkcja resetująca wszystkie wartości do stanu początkowego
+const resetExperiment = () => {
+  params.value = {
+    N: 10,
+    k: 10.0,
+    k_s: 5.0,
+    x0_val: 1.0,
+    t_max: 20.0,
+  };
+
+  times.value = []
+  results.value = []
+
+  const canvas = document.getElementById('plot')
+  if (canvas) {
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  }
+}
+
 // Funkcja pobierająca wyniki z API FastAPI
 const fetchResults = async () => {
   try {
+    const payload = {
+      N: params.value.N,
+      k: params.value.k,
+      k_s: params.value.k_s,
+      x0_val: params.value.x0_val,
+      t_max: params.value.t_max,
+    };
+    
+    console.log('Payload sent to API:', payload);
+
     const response = await fetch('http://127.0.0.1:8000/solve_system', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        N: params.value.N,
-        k: params.value.k,
-        k_s: params.value.k_s,
-        x0_val: params.value.x0_val,
-        t_max: params.value.t_max,
-      }),
-    })
+      body: JSON.stringify(payload),
+    });
 
-    const data = await response.json()
-    times.value = data.time
-    results.value = data.results
-    plotResults()
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    times.value = data.time;
+    results.value = data.results;
+    plotResults();
   } catch (error) {
-    console.error('Error fetching results:', error)
+    console.error('Error fetching results:', error);
   }
-}
+};
+
 
 const plotResults = () => {
   const canvas = document.getElementById('plot');
   const ctx = canvas.getContext('2d');
+
+  if (!results.value || results.value.length === 0 || !times.value || times.value.length === 0) {
+    console.error('No data available for plotting.');
+    return;
+  }
 
   const totalWeights = results.value.length / 2; // Liczba ciężarków (połowa wyników)
   const positions = results.value.slice(0, totalWeights); // Pobierz tylko pozycje ciężarków
@@ -56,7 +100,7 @@ const plotResults = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Wyczyść canvas
 
     // Rysowanie sprężyn jako linii między ciężarkami
-    ctx.strokeStyle = "gray";
+    ctx.strokeStyle = 'gray';
     for (let i = 0; i < totalWeights - 1; i++) {
       ctx.beginPath();
       ctx.moveTo(
@@ -87,6 +131,7 @@ const plotResults = () => {
 
   animate(); // Uruchom animację
 };
+
 </script>
 
 <template>
@@ -124,6 +169,7 @@ const plotResults = () => {
             <input type="range" v-model="params.t_max" min="5.0" max="120.0" step="5.0" />
 
             <button @click="fetchResults">Run Experiment</button>
+            <button @click="resetExperiment" style="background-color: #d64545; color: white;">Reset Experiment</button>
           </div>
         </div>
       </div>
@@ -139,6 +185,7 @@ const plotResults = () => {
   display: flex;
   justify-content: center;
   align-items: center;
+  color: black;
 }
 
 .content {
