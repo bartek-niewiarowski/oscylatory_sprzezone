@@ -3,11 +3,11 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 # Parametry układu
-num_oscillators = 5  # Liczba oscylatorów
-natural_frequencies = np.random.uniform(0.8, 1.2, num_oscillators)  # Częstotliwości własne
-coupling_strength = 0.5  # Siła sprzężenia
-time_step = 0.1  # Krok czasowy
-num_steps = 200  # Liczba kroków czasowych
+num_oscillators = 5
+natural_frequencies = np.random.uniform(0.8, 1.2, num_oscillators)
+coupling_strength = 0.5
+time_step = 0.1
+num_steps = 200
 
 # Inicjalizacja faz oscylatorów
 phases = np.random.uniform(0, 2 * np.pi, num_oscillators)
@@ -42,8 +42,8 @@ def update(frame):
     ax.set_ylim(-1.2, 1.2)
     ax.set_aspect('equal')
     for i, line in enumerate(lines):
-        x = [np.cos(phase_history[frame, i])]  # x jako lista
-        y = [np.sin(phase_history[frame, i])]  # y jako lista
+        x = [np.cos(phase_history[frame, i])]
+        y = [np.sin(phase_history[frame, i])]
         line.set_data(x, y)
         ax.add_artist(line)
     ax.legend(loc='upper right')

@@ -6,10 +6,10 @@ from matplotlib.widgets import Slider, Button
 
 # Funkcja aktualizująca macierze mas i sztywności
 def update_matrices(N, masses, k, k_s):
-    M = np.diag(masses)  # Macierz mas
+    M = np.diag(masses)
     K = (np.diag([k + k_s] * N) +
          np.diag([-k_s] * (N - 1), k=1) +
-         np.diag([-k_s] * (N - 1), k=-1))  # Macierz sztywności
+         np.diag([-k_s] * (N - 1), k=-1))
     return M, K
 
 # Funkcja obliczająca pochodne dla solve_ivp
@@ -22,10 +22,10 @@ def equations(t, y, M, K, N):
 
 # Funkcja do rozwiązywania układu równań
 def solve_system(N, k, k_s, x0_val, t_span, t_eval):
-    masses = np.linspace(1.0, 2.0, N)  # Generujemy masy od 1.0 do 2.0
-    x0 = np.zeros(N)  # Pozycje początkowe
-    v0 = np.zeros(N)  # Prędkości początkowe
-    x0[0] = x0_val  # Odchylenie pierwszego ciężarka
+    masses = np.linspace(1.0, 2.0, N)
+    x0 = np.zeros(N)
+    v0 = np.zeros(N)
+    x0[0] = x0_val
     M, K = update_matrices(N, masses, k, k_s)
     y0 = np.concatenate((x0, v0))
     sol = solve_ivp(equations, t_span, y0, t_eval=t_eval, args=(M, K, N), method='RK45')
@@ -67,11 +67,11 @@ ani = FuncAnimation(fig, animate, frames=len(t_eval), interval=30, blit=True)
 ax_k = plt.axes([0.25, 0.3, 0.65, 0.03])
 ax_k_s = plt.axes([0.25, 0.25, 0.65, 0.03])
 ax_N = plt.axes([0.25, 0.2, 0.65, 0.03])
-ax_t_max = plt.axes([0.25, 0.15, 0.65, 0.03])  # Suwak dla maksymalnego czasu
+ax_t_max = plt.axes([0.25, 0.15, 0.65, 0.03])
 slider_k = Slider(ax_k, 'k', 1.0, 20.0, valinit=k)
 slider_k_s = Slider(ax_k_s, 'k_s', 1.0, 20.0, valinit=k_s)
 slider_N = Slider(ax_N, 'N', 2, 20, valinit=N, valstep=1)
-slider_t_max = Slider(ax_t_max, 'Czas (t_max)', 5.0, 50.0, valinit=t_max)  # Suwak czasu
+slider_t_max = Slider(ax_t_max, 'Czas (t_max)', 5.0, 50.0, valinit=t_max)
 
 # Funkcja aktualizująca po zmianie suwaków
 def update(val):
@@ -82,7 +82,7 @@ def update(val):
     t_max_new = slider_t_max.val
     t_span = (0, t_max_new)
     t_eval = np.linspace(*t_span, 500)
-    if N_new != N:  # Jeśli zmieniono liczbę ciężarków, dostosuj oś X
+    if N_new != N:
         ax.set_xlim(-1, N_new)
     N = N_new
     solution = solve_system(N, k_new, k_s_new, x0_val, t_span, t_eval)

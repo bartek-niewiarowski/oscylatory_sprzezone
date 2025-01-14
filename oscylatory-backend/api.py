@@ -8,18 +8,18 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Dopuszczaj dowolne źródła
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Zezwalaj na wszystkie metody
-    allow_headers=["*"],  # Zezwalaj na wszystkie nagłówki
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Funkcja aktualizująca macierze mas i sztywności
 def update_matrices(N, masses, k, k_s):
-    M = np.diag(masses)  # Macierz mas
+    M = np.diag(masses)
     K = (np.diag([k + k_s] * N) +
          np.diag([-k_s] * (N - 1), k=1) +
-         np.diag([-k_s] * (N - 1), k=-1))  # Macierz sztywności
+         np.diag([-k_s] * (N - 1), k=-1))
     return M, K
 
 # Funkcja obliczająca pochodne dla solve_ivp
@@ -32,10 +32,10 @@ def equations(t, y, M, K, N):
 
 # Funkcja do rozwiązywania układu równań
 def solve_system(N, k, k_s, x0_val, t_span, t_eval):
-    masses = np.linspace(1.0, 2.0, N)  # Generujemy masy od 1.0 do 2.0
-    x0 = np.zeros(N)  # Pozycje początkowe
-    v0 = np.zeros(N)  # Prędkości początkowe
-    x0[0] = x0_val  # Odchylenie pierwszego ciężarka
+    masses = np.linspace(1.0, 2.0, N)
+    x0 = np.zeros(N)
+    v0 = np.zeros(N)
+    x0[0] = x0_val
     M, K = update_matrices(N, masses, k, k_s)
     y0 = np.concatenate((x0, v0))
     sol = solve_ivp(equations, t_span, y0, t_eval=t_eval, args=(M, K, N), method='RK45')
